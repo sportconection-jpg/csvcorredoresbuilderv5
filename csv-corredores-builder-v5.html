@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV Corredores Builder v9 - AutoCalc + Bonus</title>
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="light"] {
+      --text-sm: .95rem; --text-base: 1rem; --text-lg: 1.25rem; --text-xl: 1.8rem;
+      --space-2: .5rem; --space-3: .75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem;
+      --color-bg:#f7f6f2; --color-surface:#f9f8f5; --color-surface-2:#fbfbf9; --color-surface-offset:#f3f0ec; --color-border:#d4d1ca; --color-divider:#dcd9d5;
+      --color-text:#28251d; --color-text-muted:#66645d; --color-text-inverse:#f9f8f4; --color-primary:#01696f; --color-primary-hover:#0c4e54; --color-primary-highlight:#cedcd8; --color-error:#a12c7b;
+      --radius-md:.5rem; --radius-lg:.75rem; --radius-xl:1rem; --shadow-sm:0 1px 2px rgba(0,0,0,.06);
+      --font-body:'Satoshi', system-ui, sans-serif;
+    }
+    [data-theme="dark"] {
+      --color-bg:#171614; --color-surface:#1c1b19; --color-surface-2:#201f1d; --color-surface-offset:#1d1c1a; --color-border:#393836; --color-divider:#262523;
+      --color-text:#cdccca; --color-text-muted:#a3a29f; --color-text-inverse:#2b2a28; --color-primary:#4f98a3; --color-primary-hover:#227f8b; --color-primary-highlight:#313b3b; --color-error:#d163a7;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font-body); background: var(--color-bg); color: var(--color-text); font-size: var(--text-base); line-height: 1.5; overflow-x: hidden; }
+    .app { max-width: 1200px; margin: 0 auto; padding: var(--space-4); width: 100%; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); padding: var(--space-4) 0; flex-wrap: wrap; }
+    .brand { display: flex; gap: var(--space-3); align-items: center; }
+    .logo { width: 42px; height: 42px; color: var(--color-primary); flex-shrink: 0; }
+    .grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); gap: var(--space-4); align-items: start; }
+    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+    .panel { background: var(--color-surface); border: 1px solid rgba(0,0,0,.1); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); min-width: 0; overflow: hidden; }
+    .panel-inner { padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-5); }
+    .section-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+    .section-head h2 { font-size: var(--text-lg); margin: 0; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-3); }
+    .field { display: flex; flex-direction: column; gap: var(--space-2); }
+    .field label { font-size: 0.85rem; font-weight: 600; }
+    .field input, .field select { padding: .7rem; border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-surface-2); color: var(--color-text); width: 100%; font-family: inherit; }
+    
+    /* Estilo para el Checkbox */
+    .checkbox-field { flex-direction: row; align-items: center; gap: var(--space-2); padding-top: 2rem; cursor: pointer; }
+    .checkbox-field input { width: auto; cursor: pointer; }
+
+    .btn { min-height: 40px; padding: 0.5rem 1rem; border-radius: var(--radius-md); border: 1px solid transparent; cursor: pointer; font-family: inherit; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; }
+    .btn-primary { background: var(--color-primary); color: var(--color-text-inverse); }
+    .btn-secondary { background: var(--color-surface-offset); border-color: var(--color-border); color: var(--color-text); }
+    .btn-danger { background: rgba(161,44,123,.1); color: var(--color-error); border-color: rgba(161,44,123,.2); }
+    .runner-list { display: flex; flex-direction: column; gap: var(--space-2); max-height: 450px; overflow-y: auto; overflow-x: hidden; padding-right: 5px; }
+    .runner-card { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: var(--radius-lg); cursor: pointer; text-align: left; width: 100%; }
+    .runner-card.active { border-color: var(--color-primary); background: var(--color-primary-highlight); }
+    .race-card { padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-offset); border-left: 4px solid var(--color-primary); }
+    .chip { padding: .2rem .6rem; border-radius: 999px; background: var(--color-primary-highlight); color: var(--color-primary); font-size: .75rem; font-weight: 700; }
+    .preview { width: 100%; max-height: 180px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-3); background: var(--color-surface-2); font-family: monospace; font-size: 11px; overflow: auto; white-space: pre; }
+    .status { padding: .8rem; border-radius: var(--radius-md); font-size: 0.9rem; display: none; }
+    .status.show { display: block; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="10" width="48" height="44" rx="12" stroke="currentColor" stroke-width="4"/><path d="M20 24H44M20 34H44M20 44H34" stroke="currentColor" stroke-width="4"/><path d="M43 41L48 46L56 36" stroke="currentColor" stroke-width="4"/></svg>
+        <div><h1 class="title">CSV Corredores Builder</h1><p class="muted">Automatización inteligente de puntos + Extra Insular.</p></div>
+      </div>
+      <button class="btn btn-secondary" id="themeToggle">◐ Tema</button>
+    </header>
+
+    <main class="grid">
+      <section class="panel">
+        <div class="panel-inner">
+          <div class="section-head"><h2>Datos del Corredor</h2><span class="chip" id="runnerCount">0 corredores</span></div>
+          <div class="form-grid">
+            <div class="field"><label>Nombre Completo</label><input id="nombre" type="text" placeholder="Ej: Airam De La Paz"></div>
+            <div class="field"><label>Club</label><input id="club" type="text" placeholder="Opcional"></div>
+          </div>
+          
+          <div class="section-head">
+            <h2>Historial de Carreras</h2>
+            <button class="btn btn-secondary" id="addRaceBtn">+ Añadir Carrera</button>
+          </div>
+          
+          <div id="raceList" style="display: flex; flex-direction: column; gap: 1.5rem;"></div>
+          
+          <div class="button-row" style="border-top: 1px solid var(--color-divider); padding-top: 1.5rem; display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-primary" id="saveRunnerBtn">Guardar Cambios</button>
+            <button class="btn btn-secondary" id="newRunnerBtn">Limpiar / Nuevo</button>
+            <button class="btn btn-danger" id="deleteRunnerBtn">Eliminar Corredor</button>
+          </div>
+          <div id="statusBox" class="status"></div>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div class="panel-inner">
+          <div class="section-head">
+            <h2>Corredores</h2>
+            <label class="btn btn-secondary">Importar CSV<input id="importCsvInput" type="file" accept=".csv" style="display:none"></label>
+          </div>
+          <div id="runnerList" class="runner-list"></div>
+          <div style="height: 1px; background: var(--color-divider);"></div>
+          <div class="section-head"><h2>Vista previa CSV</h2></div>
+          <div id="csvPreview" class="preview"></div>
+          <div class="actions" style="display:grid; grid-template-columns: 1fr auto; gap:10px;">
+            <button class="btn btn-primary" id="downloadCsvBtn">Descargar .CSV</button>
+            <button class="btn btn-secondary" id="copyCsvBtn">Copiar</button>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <template id="raceTemplate">
+    <article class="race-card">
+      <div class="section-head" style="margin-bottom: 1rem;"><strong class="race-title">Carrera</strong><button class="btn btn-danger btn-ghost remove-race" style="height:30px; padding:0 10px;">×</button></div>
+      <div class="form-grid">
+        <div class="field"><label>Fecha</label><input type="date" data-key="fecha"></div>
+        <div class="field"><label>Nombre Carrera</label><input type="text" data-key="nombre" placeholder="Nombre del evento"></div>
+        <div class="field"><label>Modalidad</label><select data-key="tipo" class="calc-trigger"><option value="Trail">Trail</option><option value="Asfalto">Asfalto</option><option value="Mixta">Mixta</option></select></div>
+        <div class="field"><label>Isla</label><select data-key="isla"><option value="">Seleccionar...</option><option>Tenerife</option><option>Gran Canaria</option><option>La Palma</option><option>La Gomera</option><option>El Hierro</option><option>Lanzarote</option><option>Fuerteventura</option></select></div>
+        <div class="field"><label>Kms</label><input type="number" data-key="kms" step="0.1" placeholder="0.0" class="calc-trigger"></div>
+        
+        <div class="field checkbox-field">
+          <input type="checkbox" class="bonus-trigger" id="bonus_tmp">
+          <label for="bonus_tmp" style="cursor:pointer">¿Fuera de la Isla? (+1pt)</label>
+        </div>
+
+        <div class="field"><label>Puntos Finales</label><input type="number" data-key="puntos" step="0.1" placeholder="0.0" class="points-input"></div>
+      </div>
+    </article>
+  </template>
+
+  <script>
+    const puntosAsfalto = { 4: 2.3, 5: 2.7, 6: 3, 7: 3.2, 8: 3.3, 9: 3.4, 10: 4, 21: 6.2, 42: 12 };
+    const puntosTrail = { 5: 3.5, 6: 4, 7: 4.5, 8: 5, 10: 6.1, 12: 6.3, 13:6.4, 14: 6.5, 15: 6.6, 16: 6.7, 17: 6.8, 18: 6.9, 19: 7.0, 20: 7.1, 24: 7.5, 26: 7.6, 28: 7.9, 30: 8.3, 33: 8.6, 42: 14, 47: 14.5, 50: 15.2, 60: 17.2, 70: 19.2, 100: 23, 126: 25 };
+
+    const state = { runners: [], currentIndex: -1, theme: 'light' };
+    const els = {
+      nombre: document.getElementById('nombre'), club: document.getElementById('club'),
+      raceList: document.getElementById('raceList'), runnerList: document.getElementById('runnerList'), 
+      csvPreview: document.getElementById('csvPreview'), statusBox: document.getElementById('statusBox'),
+      runnerCount: document.getElementById('runnerCount'), raceTemplate: document.getElementById('raceTemplate')
+    };
+
+    function showStatus(msg, type='ok'){ 
+      els.statusBox.textContent = msg; 
+      els.statusBox.className = 'status show ' + (type === 'error' ? 'error' : 'ok'); 
+      setTimeout(() => els.statusBox.className = 'status', 3000); 
+    }
+
+  
+	function autoCalculatePoints(card) {
+      const modal = card.querySelector('[data-key="tipo"]').value;
+      const kmsInput = card.querySelector('[data-key="kms"]').value;
+      const pointsInput = card.querySelector('.points-input');
+      
+      // Si la casilla de KM está vacía, limpiamos todo y restauramos el diseño original
+      if (!kmsInput) {
+        pointsInput.value = "";
+        pointsInput.placeholder = "0.0";
+        pointsInput.style.borderColor = "var(--color-border)";
+        return;
+      }
+
+      const kms = Math.round(parseFloat(kmsInput));
+      const isOutside = card.querySelector('.bonus-trigger').checked;
+      
+      let table = modal === 'Asfalto' ? puntosAsfalto : (modal === 'Trail' ? puntosTrail : null);
+      
+      // Si los kilómetros existen en la tabla de baremos
+      if(table && table[kms] !== undefined) {
+        let basePoints = table[kms];
+        pointsInput.value = (basePoints + (isOutside ? 1.0 : 0)).toFixed(1);
+        
+        // Restauramos el estilo normal (borde original)
+        pointsInput.style.borderColor = "var(--color-border)";
+      } else {
+        // SI NO EXISTE: Borramos el valor viejo, mostramos el aviso y pintamos el borde
+        pointsInput.value = ""; 
+        pointsInput.placeholder = "Km no existe ⚠️";
+        pointsInput.style.borderColor = "var(--color-error)"; // Usa el color magenta/rojo de tu tema
+      }
+    }
+    
+    function createRaceCard(race={}){
+      const node = els.raceTemplate.content.firstElementChild.cloneNode(true);
+      const uniqueId = 'bonus_' + Math.random().toString(36).substr(2, 9);
+      
+      const checkbox = node.querySelector('.bonus-trigger');
+      const label = node.querySelector('.checkbox-field label');
+      checkbox.id = uniqueId;
+      label.setAttribute('for', uniqueId);
+
+      node.querySelectorAll('[data-key]').forEach(input => {
+        input.value = race[input.dataset.key] || (input.tagName === 'SELECT' && input.dataset.key === 'tipo' ? 'Trail' : '');
+      });
+
+      node.querySelectorAll('.calc-trigger, .bonus-trigger, [data-key="kms"]').forEach(el => {
+        ['input', 'change'].forEach(evt => {
+          el.addEventListener(evt, () => autoCalculatePoints(node));
+        });
+      });
+
+      node.querySelector('.remove-race').onclick = () => { node.remove(); updateRaceTitles(); };
+      els.raceList.appendChild(node);
+      updateRaceTitles();
+    }
+
+    function updateRaceTitles(){ 
+      Array.from(els.raceList.children).forEach((el, i) => el.querySelector('.race-title').textContent = 'Carrera ' + (i+1)); 
+    }
+
+    function readForm(){
+      const races = Array.from(els.raceList.children).map(card => {
+        const obj = {}; 
+        card.querySelectorAll('[data-key]').forEach(i => obj[i.dataset.key] = i.value); 
+        return obj;
+      }).filter(r => r.nombre || r.fecha);
+      return { nombre: els.nombre.value.trim(), club: els.club.value.trim(), carreras: races };
+    }
+
+    function fillForm(runner){
+      els.nombre.value = runner.nombre || ''; 
+      els.club.value = runner.club || '';
+      els.raceList.innerHTML = '';
+      if(runner.carreras && runner.carreras.length){
+        runner.carreras.forEach(r => createRaceCard(r));
+      } else {
+        createRaceCard();
+      }
+    }
+
+    function saveRunner(){
+      const runnerData = readForm();
+      if(!runnerData.nombre) return showStatus('El nombre es obligatorio', 'error');
+      
+      if(state.currentIndex >= 0){
+        state.runners[state.currentIndex] = runnerData;
+        showStatus('Datos actualizados');
+      } else {
+        const existingIdx = state.runners.findIndex(r => r.nombre.toLowerCase() === runnerData.nombre.toLowerCase());
+        if(existingIdx >= 0){
+          state.runners[existingIdx] = runnerData;
+          state.currentIndex = existingIdx;
+          showStatus('Corredor existente actualizado');
+        } else {
+          state.runners.push(runnerData);
+          showStatus('Nuevo corredor guardado');
+        }
+      }
+      
+      // ORDENAR ALFABÉTICAMENTE DESPUÉS DE GUARDAR
+      state.runners.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+      
+      // Actualizar el índice activo para que apunte de nuevo al corredor correcto tras el reordenamiento
+      state.currentIndex = state.runners.findIndex(r => r.nombre.toLowerCase() === runnerData.nombre.toLowerCase());
+
+      renderAll();
+    }
+
+    function renderAll(){
+      els.runnerCount.textContent = state.runners.length + ' corredores';
+      els.runnerList.innerHTML = '';
+      state.runners.forEach((r, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'runner-card' + (i === state.currentIndex ? ' active' : '');
+        const totalPts = r.carreras.reduce((a,b) => a + Number(b.puntos || 0), 0).toFixed(1);
+        btn.innerHTML = `<div style="min-width:0; flex:1"><strong>${r.nombre}</strong><br><small class="muted">${r.carreras.length} carreras</small></div><span class="chip">${totalPts} pts</span>`;
+        btn.onclick = () => { state.currentIndex = i; fillForm(state.runners[i]); renderAll(); };
+        els.runnerList.appendChild(btn);
+      });
+      renderCsv();
+    }
+
+    function buildCsv(){
+      if(!state.runners.length) return '';
+      const maxRaces = Math.max(...state.runners.map(r => r.carreras.length), 0);
+      let headers = ['nombre','club','modalidad'];
+      for(let i=1; i<=maxRaces; i++) headers.push(`fecha${i}`, `nombre${i}`, `isla${i}`, `tipo${i}`, `kms${i}`, `puntos${i}`);
+      
+      const rows = state.runners.map(r => {
+        let row = [r.nombre, r.club, r.carreras[0]?.tipo || '']; 
+        r.carreras.forEach(c => {
+          row.push(c.fecha || '', c.nombre || '', c.isla || '', c.tipo || 'Trail', c.kms || '0', c.puntos || '0');
+        });
+        while(row.length < headers.length) row.push('');
+        return row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+      });
+      return [headers.join(','), ...rows].join('\n');
+    }
+
+    function renderCsv(){ els.csvPreview.textContent = buildCsv() || 'No hay datos.'; }
+
+    function parseCsv(text){
+      const lines = text.split('\n').filter(l => l.trim());
+      if(lines.length < 2) return [];
+      const parsed = lines.slice(1).map(line => {
+        const c = line.split(',').map(s => s.replace(/^"|"$/g, '').trim());
+        const r = { nombre: c[0], club: c[1], carreras: [] };
+        for(let i=3; i<c.length; i+=6){
+          if(c[i] || c[i+1]) {
+            r.carreras.push({
+              fecha: c[i], nombre: c[i+1], isla: c[i+2], 
+              tipo: c[i+3] || 'Trail', kms: c[i+4], puntos: c[i+5]
+            });
+          }
+        }
+        return r;
+      });
+
+      // ORDENAR ALFABÉTICAMENTE AL IMPORTAR EL CSV (ignorando mayúsculas/minúsculas y acentos)
+      parsed.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+      return parsed;
+    }
+
+    document.getElementById('addRaceBtn').onclick = () => createRaceCard();
+    document.getElementById('saveRunnerBtn').onclick = saveRunner;
+    document.getElementById('newRunnerBtn').onclick = () => { state.currentIndex = -1; fillForm({}); createRaceCard(); renderAll(); };
+    document.getElementById('deleteRunnerBtn').onclick = () => { if(state.currentIndex < 0) return; state.runners.splice(state.currentIndex, 1); state.currentIndex = -1; renderAll(); };
+    document.getElementById('downloadCsvBtn').onclick = () => {
+      const csv = buildCsv(); if(!csv) return;
+      const b = new Blob([csv], {type:'text/csv;charset=utf-8'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download='corredores_v9.csv'; a.click();
+    };
+    document.getElementById('copyCsvBtn').onclick = () => { navigator.clipboard.writeText(buildCsv()); showStatus('Copiado'); };
+    document.getElementById('importCsvInput').onchange = async (e) => {
+      const f = e.target.files[0]; if(!f) return;
+      state.runners = parseCsv(await f.text());
+      state.currentIndex = -1;
+      renderAll();
+    };
+    document.getElementById('themeToggle').onclick = () => {
+      state.theme = state.theme === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', state.theme);
+    };
+
+    createRaceCard();
+    renderAll();
+  </script>
+</body>
+</html>
